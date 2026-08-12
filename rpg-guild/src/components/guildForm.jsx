@@ -1,17 +1,29 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState , useEffect } from "react";
 
 import requester from "../axios";
 
-
-
 export function GuildForm(props) {
-    const { guildId } = useParams();
+  const { guildId } = useParams();
     const [guild, setGuild] = useState();
-const addGuild = async (guild) => {
+    const addGuild = async (guild) => {
     const { name } = guild;
 
     const create = { name };
+useEffect(() => {
+    const getGuild = async () => {
+        try {
+            const response = await requester.get(`/guilds/${guildId}`);
+            setGuild(response.data);
+        } catch (error) {
+            console.error('Erro ao buscar a guilda:', error);
+        }
+    };
+
+    if (guildId) getGuild();
+}, [guildId]);
+
+  
 
     try {
         const response = await requester.post('/guilds', create);
@@ -23,10 +35,25 @@ const addGuild = async (guild) => {
 
 const onSubmit = (e) => {
     e.preventDefault();
-    addGuild(guild);
+    handleSubmit(guild);
 };
+
+    const editGuild = async (guild) => {
+        const { id , name } = guild;
+
+        const updated = { name, };
+
+        try {
+            const response = await requester.put(`/guilds/${guildId}`, updated);
+            props.updateGuilds?.(response.data);
+        } catch (error) {
+            console.error("Erro ao editar guilda:", guildId);
+        }
+    };
+
+    const handleSubmit = guildId ? editGuild : addGuild;
     return(
-        <form onSubmit={onSubmit} className="flex flex-col gap-4" p-5 text-orange-500>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4 text-orange-500">
             <div className="flex flex-col gap-1">
             <label>Guilda</label>
             <input
@@ -43,7 +70,7 @@ const onSubmit = (e) => {
             />
             </div>
 
-    <button type="submit" className="-fit">Confirmar</button>
+    <button type="submit" className="w-fit">Confirmar</button>
 
         </form>
     )
